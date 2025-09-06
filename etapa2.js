@@ -1,63 +1,54 @@
-let mic, amplitude, stars = [], mobileAlertShown=false;
-let isMobile = /Mobi|Android/i.test(navigator.userAgent);
+let mic, fft;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  background(0);
   mic = new p5.AudioIn();
   mic.start();
-  amplitude = new p5.Amplitude();
-  amplitude.setInput(mic);
-
-  if(isMobile && !mobileAlertShown){
-    alert("Tocá la pantalla y hablá para activar el confesionario.");
-    mobileAlertShown = true;
-  }
-
-  textFont('Arial');textSize(24);fill(255,0,0);textAlign(CENTER,CENTER);
-  text("Hablá tu secreto...", width/2, height/2);
+  fft = new p5.FFT();
+  fft.setInput(mic);
+  background(0);
 }
 
 function draw() {
-  background(0,50);
-
-  let level = amplitude.getLevel();
-  let nStars = floor(level * 1000);
-
-  for(let i=0;i<nStars;i++){
-    let s = {x:random(width),y:random(height),outer:random(10,30),inner:random(5,15),spikes:5};
-    stars.push(s);
-  }
-
-  for(let s of stars){
-    drawStar(s.x,s.y,s.spikes,s.outer,s.inner);
-  }
-
-  if(isMobile){
-    textSize(32);fill(255,0,0);textAlign(RIGHT,BOTTOM);
-    text("@estrella_", width-10,height-10);
-  }
-
-  if(stars.length>500){stars.splice(0,stars.length-500);}
-}
-
-function drawStar(cx,cy,spikes,outer,inner){
-  let angle = TWO_PI/spikes;
-  let halfAngle = angle/2;
-  beginShape();
+  // Fondo negro con rastro
+  background(0, 30);
+  
+  // Datos de audio
+  let spectrum = fft.analyze();
+  let amp = mic.getLevel();
+  let avgFreq = fft.getEnergy("mid"); // energía media
+  
+  // Patrón de pulso central
+  stroke(255, 0, 0);
+  strokeWeight(2);
+  let y = map(amp, 0, 1, height, 0);
+  line(width/2, height, width/2, y);
+  
+  // Patrón de ondas
   noFill();
-  stroke(255,0,0);strokeWeight(2);
-  for(let a=0;a<TWO_PI;a+=angle){
-    let sx = cx + cos(a)*outer;
-    let sy = cy + sin(a)*outer;
-    vertex(sx,sy);
-    sx = cx + cos(a+halfAngle)*inner;
-    sy = cy + sin(a+halfAngle)*inner;
-    vertex(sx,sy);
+  beginShape();
+  stroke(255);
+  for (let i = 0; i < spectrum.length; i++) {
+    let x = map(i, 0, spectrum.length, 0, width);
+    let y = map(spectrum[i], 0, 255, height, 0);
+    vertex(x, y);
   }
-  endShape(CLOSE);
+  endShape();
+  
+  // Patrón abstracto de partículas
+  drawPattern(amp, avgFreq);
 }
 
-function windowResized(){
-  resizeCanvas(windowWidth, windowHeight);
+function drawPattern(amp, freq) {
+  let r = map(amp, 0, 1, 10, 150);
+  let col = color(
+    map(freq, 0, 255, 200, 255), // rojo-blanco-azul
+    50,
+    map(freq, 0, 255, 255, 100),
+    150
+  );
+  
+  noStroke();
+  fill(col);
+  ellipse(random(width), random(height), r, r);
 }
