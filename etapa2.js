@@ -10,7 +10,8 @@ let textoMostrado = "";
 let startTime;
 let typing = false;
 let charIndex = 0;
-let typingSpeed = 3; // velocidad: frames por carácter
+let typingSpeed = 3; // frames por carácter
+let finishedTime = null; // para medir la pausa de 10s
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -20,11 +21,16 @@ function setup() {
   fft.setInput(mic);
   background(0);
 
-  startTime = millis(); // para contar los 4 segundos
+  startTime = millis(); // para contar los 4 segundos iniciales
 }
 
 function draw() {
   background(0, 40);
+
+  // --- Texto máquina de escribir (al fondo) ---
+  if (millis() - startTime > 4000) {
+    typewriter();
+  }
 
   // --- AUDIO Y VISUALES ---
   let spectrum = fft.analyze();
@@ -64,17 +70,12 @@ function draw() {
   // Estrellas
   drawStars(amp, avgFreq);
 
-  // Texto datos audio
+  // Texto datos audio (arriba de todo)
   noStroke();
   fill(255);
   textSize(16);
   text("Amplitud: " + ampPerc, 20, 30);
   text("Frecuencia media: " + freqPerc, 20, 55);
-
-  // --- Texto máquina de escribir ---
-  if (millis() - startTime > 4000) {
-    typewriter();
-  }
 }
 
 function drawStars(amp, freq) {
@@ -106,8 +107,21 @@ function star(x, y, radius1, radius2, npoints) {
 // --- Máquina de escribir ---
 function typewriter() {
   fill(255);
-  textSize(32);
+  textSize(28); // más grande
   textAlign(LEFT, TOP);
+
+  // Si terminó todo y estamos esperando el reinicio
+  if (finishedTime) {
+    if (millis() - finishedTime > 10000) { // 10 segundos de pausa
+      textoActual = 0;
+      textoMostrado = "";
+      charIndex = 0;
+      typing = false;
+      finishedTime = null;
+    }
+    text(textoMostrado, 20, height - 200, width - 40);
+    return;
+  }
 
   if (!typing) {
     typing = true;
@@ -120,7 +134,7 @@ function typewriter() {
     charIndex++;
   }
 
-  text(textoMostrado, 20, height - 150, width - 40);
+  text(textoMostrado, 20, height - 200, width - 40);
 
   // Si terminó de escribir un texto, pasa al siguiente
   if (charIndex === textos[textoActual].length) {
@@ -130,6 +144,9 @@ function typewriter() {
       textoMostrado = "";
       charIndex = 0;
       typing = true;
+    } else {
+      // Terminó todo → empieza la espera de 10s
+      finishedTime = millis();
     }
   }
 }
