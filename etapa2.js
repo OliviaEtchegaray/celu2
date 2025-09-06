@@ -3,7 +3,7 @@ let mic, fft;
 // --- Texto máquina de escribir ---
 let textos = [
   "El proyecto Confesionario Algorítmico parte de la premisa de que la intimidad ya no es solamente un acto emocional o personal, sino también un fenómeno tecnológico y social.",
-  "Ni bien termina de escribirse arranca otro enfrenta la tensión que hay en depositar en un entorno controlado la realidad de que cualquier experiencia personal puede ser transformada en dato."
+  "Enfrenta la tensión que hay en depositar en un entorno controlado la realidad de que cualquier experiencia personal puede ser transformada en dato."
 ];
 let textoActual = 0;
 let textoMostrado = "";
@@ -106,7 +106,7 @@ function star(x, y, radius1, radius2, npoints) {
 // --- Máquina de escribir ---
 function typewriter() {
   fill(255);
-  textSize(20);
+  textSize(32);
   textAlign(LEFT, TOP);
 
   if (!typing) {
